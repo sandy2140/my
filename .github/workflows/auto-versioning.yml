@@ -1,0 +1,40 @@
+name: Auto Versioning
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  versioning:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Git
+        uses: actions/setup-git@v2
+
+      - name: Set version based on commit message
+        run: |
+          # Check the latest commit message
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          VERSION=""
+
+          # Determine version based on commit message
+          if [[ "$COMMIT_MSG" == *"CHORE"* ]]; then
+            VERSION="v1.0.0"
+          elif [[ "$COMMIT_MSG" == *"FEA"* ]]; then
+            VERSION="v0.1.0"
+          elif [[ "$COMMIT_MSG" == *"FIX"* ]]; then
+            VERSION="v0.0.1"
+          fi
+
+          # Tag the commit
+          echo "Tagging commit with version: $VERSION"
+          git tag $VERSION
+
+      - name: Push version tag to GitHub
+        run: |
+          git push origin --tags
