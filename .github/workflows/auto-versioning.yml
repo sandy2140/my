@@ -34,8 +34,9 @@ jobs:
 
       - name: Push version tag to GitHub
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MY_SECRET_KEY: ${{ secrets.MY_SECRET_KEY }}  # Replace with the name of your secret
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git push https://github.com/${{ github.repository }} --tags
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git push origin --tags
