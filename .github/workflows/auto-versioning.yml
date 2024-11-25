@@ -1,42 +1,45 @@
-name: Auto Versioning
+name: Auto Tag on Commit
 
 on:
   push:
     branches:
-      - main
+      - main  # Adjust branch if needed
 
 jobs:
-  versioning:
+  tag:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Set version based on commit message
+      - name: Set up Git
         run: |
-          # Check the latest commit message
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          VERSION=""
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
 
-          # Determine version based on commit message
-          if [[ "$COMMIT_MSG" == *"CHORE"* ]]; then
-            VERSION="v1.0.0"
-          elif [[ "$COMMIT_MSG" == *"FEA"* ]]; then
-            VERSION="v0.1.0"
-          elif [[ "$COMMIT_MSG" == *"FIX"* ]]; then
-            VERSION="v0.0.1"
-          fi
-
-          # Tag the commit
-          echo "Tagging commit with version: $VERSION"
-          git tag $VERSION
-
-      - name: Push version tag to GitHub
-        env:
-          MY_SECRET_KEY: ${{ secrets.MY_SECRET_KEY }}  # Replace with the name of your secret
+      - name: Determine Tag
+        id: tag
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git push origin --tags
+          # Get the latest tag
+          latest_tag=$(git describe --tags --abbrev=0 || echo "v0.0.0")
+
+          # Extract version parts
+          IFS='.' read -r major minor patch <<<"${latest_tag//v/}"
+
+          # Read commit message
+          commit_message=$(git log -1 --pretty=%B)
+
+          # Determine the next version based on commit message
+          case "$commit_message" in
+            CHORE:*) new_tag="v$((major+1)).0.0" ;;
+            FEA:*) new_tag="v$major.$((minor+1)).0" ;;
+            FIX:*) new_tag="v$major.$minor.$((patch+1))" ;;
+            *) echo "No version change required"; exit 0 ;;
+          esac
+
+          echo "new_tag=$new_tag" >> $GITHUB_ENV
+
+      - name: Create Tag
+        run: |
+          git tag ${{ env.new_tag }}
+          git push origin ${{ env.new_tag }}
