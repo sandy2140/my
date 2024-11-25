@@ -17,6 +17,10 @@ jobs:
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
 
+      - name: Authenticate with GitHub using PAT
+        run: |
+          git config --global url."https://${{ secrets.ACTIONS_PAT }}@github.com/".insteadOf "https://github.com/"
+
       - name: Determine Tag
         id: tag
         run: |
