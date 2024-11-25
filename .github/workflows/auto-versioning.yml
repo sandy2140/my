@@ -8,13 +8,10 @@ on:
 jobs:
   versioning:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Set up Git
-        uses: actions/setup-git@v2
 
       - name: Set version based on commit message
         run: |
