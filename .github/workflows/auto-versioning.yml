@@ -8,6 +8,7 @@ on:
 jobs:
   tag:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -16,10 +17,6 @@ jobs:
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-
-      - name: Authenticate with GitHub using PAT
-        run: |
-          git config --global url."https://${{ secrets.ACTIONS_PAT }}@github.com/".insteadOf "https://github.com/"
 
       - name: Determine Tag
         id: tag
@@ -46,4 +43,4 @@ jobs:
       - name: Create Tag
         run: |
           git tag ${{ env.new_tag }}
-          git push origin ${{ env.new_tag }}
+          git push https://x-access-token:${{ secrets.TOKEN }}@github.com/${{ github.repository }} ${{ env.new_tag }}
